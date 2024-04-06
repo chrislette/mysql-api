@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const queries = require('./queries/scores.queries');
+const authQueries = require('./queries/auth.queries');
 
 const host = process.env.DB_HOST || 'localhost';
 
@@ -20,9 +21,14 @@ con.connect(function(err) {
     if (err) throw err;
     console.log('Connected!');
 
+    con.query(authQueries.CREATE_USERS_TABLE, function(err, result) {
+        if (err) throw err;
+        console.log("Users table created or exists already!");
+    })
+
     con.query(queries.CREATE_SCORES_TABLE, function(err, result) {
         if (err) throw err;
-        console.log('Table created or exists already!');
+        console.log('Scores table created or exists already!');
     });
 });
 
