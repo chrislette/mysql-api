@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 
@@ -15,6 +16,8 @@ app.use(logger(logLevel));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+app.use(cors());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
