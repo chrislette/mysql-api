@@ -8,6 +8,10 @@ const userQueries = require('../queries/user.queries');
 const auth = require('basic-auth');
 
 exports.registerUser = function(req, res) {
+    if(!req.body.password) {
+        res.status(500);
+        res.json({msg: 'Password cannot be empty!' });
+    }
     const passwordHash = bcrypt.hashSync(req.body.password);
 
     con.query(

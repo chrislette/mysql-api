@@ -11,7 +11,7 @@ scoresRoutes
     .post('/', controllers.createScore);
 
 /**
- * Routes for a score by ID. Evaluates to `/score/:scoreId`.
+ * Routes for a score by ID. Evaluates to `/scores/:scoreId`.
  */
 scoresRoutes
     .get('/:scoreId', controllers.getScore)

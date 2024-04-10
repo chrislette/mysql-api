@@ -11,6 +11,7 @@ const middleware = require('./middleware/errors.middleware');
 const app = express();
 const port = process.env.PORT || 3000;
 const logLevel = process.env.LOG_LEVEL || 'dev';
+const env = process.env.NODE_ENV;
 
 app.use(logger(logLevel));
 
