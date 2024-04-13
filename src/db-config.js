@@ -1,35 +1,43 @@
 const mysql = require('mysql');
-const queries = require('./queries/scores.queries');
-const authQueries = require('./queries/auth.queries');
+const { CREATE_USERS_TABLE } = require('./queries/user.queries');
+const { CREATE_SCORES_TABLE } = require('./queries/scores.queries');
+const query = require('./utils/query');
 
+// Get the Host from Environment or use default
 const host = process.env.DB_HOST || 'localhost';
 
+// Get the User for DB from Environment or use default
 const user = process.env.DB_USER || 'root';
 
+// Get the Password for DB from Environment or use default
 const password = process.env.DB_PASS || 'password';
 
+// Get the Database from Environment or use default
 const database = process.env.DB_DATABASE || 'game';
 
-const con = mysql.createConnection({
-    host,
-    user,
-    password,
-    database
-});
-
-con.connect(function(err) {
-    if (err) throw err;
-    console.log('Connected!');
-
-    con.query(authQueries.CREATE_USERS_TABLE, function(err, result) {
-        if (err) throw err;
-        console.log("Users table created or exists already!");
-    })
-
-    con.query(queries.CREATE_SCORES_TABLE, function(err, result) {
-        if (err) throw err;
-        console.log('Scores table created or exists already!');
+// Create the connection with required details
+module.exports = async () =>
+  new Promise(async (resolve, reject) => {
+    const con = mysql.createConnection({
+      host,
+      user,
+      password,
+      database,
     });
-});
 
-module.exports = con;
+    const userTableCreated = await query(con, CREATE_USERS_TABLE).catch(
+      (err) => {
+        reject(err);
+      }
+    );
+
+    const scoresTableCreated = await query(con, CREATE_SCORES_TABLE).catch(
+      (err) => {
+        reject(err);
+      }
+    );
+
+    if (!!userTableCreated && !!scoresTableCreated) {
+      resolve(con);
+    }
+  });

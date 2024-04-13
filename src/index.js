@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const scoresRoutes = require('./routes/scores.routes');
-const middleware = require('./middleware/errors.middleware');
+const {error404, error500} = require('./middleware/errors.middleware');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -23,8 +23,8 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/scores', scoresRoutes);
-app.use(middleware.error404);
-app.use(middleware.error500);
+app.use(error404);
+app.use(error500);
 
 app.listen(port, () => {
     console.log(`Running on port: ${port}...`);

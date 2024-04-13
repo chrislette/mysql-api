@@ -44,7 +44,7 @@ describe('Scores API Service', function() {
             score: 10150,
             user: "Gabriel"
         };
-        const expected = { message: "Number of records inserted: 1" };
+        const expected = { msg: "Added score successfully!" };
         chai
             .request('http://localhost:3000')
             .post('/api/scores')
