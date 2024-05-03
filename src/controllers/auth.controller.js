@@ -10,11 +10,15 @@ const query = require('../utils/query');
 const { refreshTokens, generateAccessToken, generateRefreshToken } = require('../utils/jwt-helpers');
 const { verifyToken } = require('../utils/jwt-helpers');
 const { jwtconfig } = require('../utils/jwt-helpers');
+const escape = require('../utils/escape');
 
 exports.register = async (req, res) => {
     // params setup
     const passwordHash = bcrypt.hashSync(req.body.password);
-    const params = [req.body.username, req.body.email, passwordHash];
+    const { username, email, password } = escape({
+        ... req.body,
+        password: passwordHash,
+    });
 
     // establish a connection
     const con = await connection().catch((err) => {
@@ -22,7 +26,7 @@ exports.register = async (req, res) => {
     });
 
     // check for existing user first
-    const user = await query(con, GET_ME_BY_USERNAME, [req.body.username]).catch(
+    const user = await query(con, GET_ME_BY_USERNAME(username)).catch(
         (err) => {
             res.status(500);
             res.json({ msg: 'Could not retrieve user.' });
@@ -35,7 +39,7 @@ exports.register = async (req, res) => {
     } else {
     
         // add new user
-        const result = await query(con, INSERT_NEW_USER, params).catch((err) => {
+        const result = await query(con, INSERT_NEW_USER(username, email, password)).catch((err) => {
             //   stop registeration
             res
                 .status(500)
@@ -49,15 +53,16 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+    const { username } = escape(req.body);
+    const { password } = req.body;
+
     // establish a connection
     const con = await connection().catch((err) => {
         throw err;
     });
 
     // check for existing user first
-    const user = await query(con, GET_ME_BY_USERNAME_WITH_PASSWORD, [
-        req.body.username,
-    ]).catch((err) => {
+    const user = await query(con, GET_ME_BY_USERNAME_WITH_PASSWORD(username)).catch((err) => {
         res.status(500);
         res.json({ msg: 'Could not retrieve user.' });
     });
@@ -95,6 +100,8 @@ exports.login = async (req, res) => {
                 refresh_token: refreshToken,
             });
             
+    } else {
+        res.status(401).json({ msg: 'Invalid login credentials.' });
     }
 };
 

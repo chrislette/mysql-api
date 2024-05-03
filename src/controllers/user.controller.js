@@ -19,16 +19,17 @@ exports.getMe = async (req, res) => {
             throw err;
         });
 
-        const user = await query(con, GET_ME_BY_USER_ID, [decoded.id]).catch(
+        const user = await query(con, GET_ME_BY_USER_ID(decoded.id)).catch(
             (err) => {
                 res.status(500).json({ msg: 'Could not find the user.' });
             }
         );
 
-        if (!user.length) {
+        if (user.length) {
+            res.status(200).json(user);
+        } else {
             res.status(400).json({ msg: 'No user found.' });
         }
-        res.status(200).json(user);
     }
 };
 
@@ -39,40 +40,54 @@ exports.updateMe = async function(req, res) {
     });
 
     // check for existing user first
-    const user = await query(con, GET_ME_BY_USER_ID_WITH_PASSWORD, [
-        req.user.id,
-    ]).catch((err) => {
-        res.status(500);
-        res.json({ msg: 'Could not retrieve user.' });
+    const existingUser = await query(
+        con,
+        GET_ME_BY_USER_ID_WITH_PASSWORD(req.user.id)
+    ).catch((err) => {
+        res.status(500).json({ msg: 'Could not retrieve user.' });
     });
+
+    const {
+        username: existingUsername,
+        email: existingEmail,
+        password: existingPassword,
+    } = existingUser
+
+    const { username, email, password } = req.body;
 
     // checked for password changed
     // SAME LOGIC AS CHECKING FOR A VALID PASSWORD
-    const passwordUnchanged = await bcrypt
-        .compare(req.body.password, user[0].password)
+    const isPasswordSame = await bcrypt
+        .compare(password, existingPassword)
         .catch((err) => {
             res.status(500).json({ msg: 'Invalid password! '});
         });
 
-    if (!passwordUnchanged) {
+    const newUser = username || existingUsername;
+    const newEmail = email || existingEmail;
+    const newPassword = !isPasswordSame ? bcrypt.hashSync(password) : existingPassword;
 
-        const passwordHash = bcrypt.hashSync(req.body.password);
+    const {
+        newUser: escapedUsername,
+        newEmail: escapedEmail,
+        newPassword: escapedPassword,
+    } = escape({
+        newUser,
+        newEmail,
+        newPassword,
+    });
 
-        // perform update
-        const result = await query(con, UPDATE_USER, [
-            req.body.username,
-            req.body.email,
-            passwordHash, 
-            user[0].user_id,
-        ]).catch((err) => {
-            res.status(500).json({ msg: 'Could not update user settings.' });
-        });
+    const result = await query(
+        con,
+        UPDATE_USER(escapedUsername, escapedEmail, escapedPassword, req.user.id)
+    ).catch((err) => {
+        console.log(err);
+        res.status(500).json({ msg: 'Could not update user settings.' });
+    })
 
-        if (result.affectedRows > 0) {
-            return res.json({ msg: 'Updated successfully!'});
-        }
-        
+    if (result.affectedRows === 1) {
+        res.json({ msg: 'Updated successfully! '});
+    } else {
+        res.json({ msg: 'Nothing to update...'});
     }
-
-    res.json({ msg: 'Nothing to update...'});
 };
