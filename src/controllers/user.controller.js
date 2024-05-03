@@ -7,6 +7,7 @@ const {
   GET_ME_BY_USER_ID_WITH_PASSWORD,
   UPDATE_USER,
 } = require('../queries/user.queries');
+const escape = require('../utils/escape');
 
 exports.getMe = async (req, res) => {
     // verify valid token
@@ -86,8 +87,8 @@ exports.updateMe = async function(req, res) {
     })
 
     if (result.affectedRows === 1) {
-        res.json({ msg: 'Updated successfully! '});
+        // res.json({ msg: 'Updated succesfully!' });
     } else {
-        res.json({ msg: 'Nothing to update...'});
+        res.json({ msg: 'Nothing to update...' });
     }
 };
